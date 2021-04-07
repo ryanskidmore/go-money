@@ -105,13 +105,13 @@ func (f Formatter) abs(amount int64) int64 {
 }
 
 func parseFormattedString(s string, currency *Currency) (int64, error) {
+	// Remove currency code if in string
+	s = strings.Replace(s, currency.Code, "", -1)
+
 	// If the numeric string is empty, assume it's zero
 	if len(s) == 0 {
 		return 0, nil
 	}
-
-	// Remove currency code if in string
-	s = strings.Replace(s, currency.Code, "", -1)
 
 	// If the first character is a minus sign, we know this is a negative number
 	negative := false
