@@ -3,6 +3,7 @@ package money
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"reflect"
 	"testing"
@@ -75,6 +76,18 @@ func TestMoney_Equals(t *testing.T) {
 			t.Errorf("Expected %d Equals %d == %t got %t", m.amount.val,
 				om.amount.val, tc.expected, r)
 		}
+	}
+}
+
+func TestMoney_Equals_DifferentCurrencies(t *testing.T) {
+	t.Parallel()
+
+	eur := New(0, EUR)
+	usd := New(0, USD)
+
+	_, err := eur.Equals(usd)
+	if err == nil || !errors.Is(ErrCurrencyMismatch, err) {
+		t.Errorf("Expected Equals to return %q, got %v", ErrCurrencyMismatch.Error(), err)
 	}
 }
 
@@ -418,6 +431,9 @@ func TestMoney_Split(t *testing.T) {
 		{100, 3, []int64{34, 33, 33}},
 		{100, 4, []int64{25, 25, 25, 25}},
 		{5, 3, []int64{2, 2, 1}},
+		{-101, 4, []int64{-26, -25, -25, -25}},
+		{-101, 4, []int64{-26, -25, -25, -25}},
+		{-2, 3, []int64{-1, -1, 0}},
 	}
 
 	for _, tc := range tcs {
@@ -626,6 +642,19 @@ func TestDefaultMarshal(t *testing.T) {
 	if string(b) != expected {
 		t.Errorf("Expected %s got %s", expected, string(b))
 	}
+
+	given = &Money{}
+	expected = `{"amount":0,"currency":""}`
+
+	b, err = json.Marshal(given)
+
+	if err != nil {
+		t.Error(err)
+	}
+
+	if string(b) != expected {
+		t.Errorf("Expected %s got %s", expected, string(b))
+	}
 }
 
 func TestCustomMarshal(t *testing.T) {
@@ -658,6 +687,38 @@ func TestDefaultUnmarshal(t *testing.T) {
 
 	if m.Display() != expected {
 		t.Errorf("Expected %s got %s", expected, m.Display())
+	}
+
+	given = `{"amount": 0, "currency":""}`
+	err = json.Unmarshal([]byte(given), &m)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if m != (Money{}) {
+		t.Errorf("Expected zero value, got %+v", m)
+	}
+
+	given = `{}`
+	err = json.Unmarshal([]byte(given), &m)
+	if err != nil {
+		t.Error(err)
+	}
+
+	if m != (Money{}) {
+		t.Errorf("Expected zero value, got %+v", m)
+	}
+
+	given = `{"amount": "foo", "currency": "USD"}`
+	err = json.Unmarshal([]byte(given), &m)
+	if !errors.Is(err, ErrInvalidJSONUnmarshal) {
+		t.Errorf("Expected ErrInvalidJSONUnmarshal, got %+v", err)
+	}
+
+	given = `{"amount": 1234, "currency": 1234}`
+	err = json.Unmarshal([]byte(given), &m)
+	if !errors.Is(err, ErrInvalidJSONUnmarshal) {
+		t.Errorf("Expected ErrInvalidJSONUnmarshal, got %+v", err)
 	}
 }
 
