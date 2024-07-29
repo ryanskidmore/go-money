@@ -841,9 +841,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "GBP string with empty decimal",
 			amount: "GBP 1.00",
 			want: &Money{
-				amount: &Amount{
-					val: 100,
-				},
+				amount:   100,
 				currency: currencies["GBP"],
 			},
 			wantErr: false,
@@ -852,9 +850,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "USD string with decimal",
 			amount: "USD 123.45",
 			want: &Money{
-				amount: &Amount{
-					val: 12345,
-				},
+				amount:   12345,
 				currency: currencies["USD"],
 			},
 			wantErr: false,
@@ -863,9 +859,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "USD string with thousands and decimal",
 			amount: "USD 123,456.78",
 			want: &Money{
-				amount: &Amount{
-					val: 12345678,
-				},
+				amount:   12345678,
 				currency: currencies["USD"],
 			},
 			wantErr: false,
