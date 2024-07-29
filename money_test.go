@@ -12,8 +12,8 @@ import (
 func TestNew(t *testing.T) {
 	m := New(1, EUR)
 
-	if m.amount.val != 1 {
-		t.Errorf("Expected %d got %d", 1, m.amount.val)
+	if m.amount != 1 {
+		t.Errorf("Expected %d got %d", 1, m.amount)
 	}
 
 	if m.currency.Code != EUR {
@@ -22,8 +22,28 @@ func TestNew(t *testing.T) {
 
 	m = New(-100, EUR)
 
-	if m.amount.val != -100 {
-		t.Errorf("Expected %d got %d", -100, m.amount.val)
+	if m.amount != -100 {
+		t.Errorf("Expected %d got %d", -100, m.amount)
+	}
+}
+
+func TestNew_WithUnregisteredCurrency(t *testing.T) {
+	const currencyFooCode = "FOO"
+	const expectedAmount = 100
+	const expectedDisplay = "1.00FOO"
+
+	m := New(100, currencyFooCode)
+
+	if m.amount != expectedAmount {
+		t.Errorf("Expected amount %d got %d", expectedAmount, m.amount)
+	}
+
+	if m.currency.Code != currencyFooCode {
+		t.Errorf("Expected currency code %s got %s", currencyFooCode, m.currency.Code)
+	}
+
+	if m.Display() != expectedDisplay {
+		t.Errorf("Expected display %s got %s", expectedDisplay, m.Display())
 	}
 }
 
@@ -73,8 +93,8 @@ func TestMoney_Equals(t *testing.T) {
 		r, err := m.Equals(om)
 
 		if err != nil || r != tc.expected {
-			t.Errorf("Expected %d Equals %d == %t got %t", m.amount.val,
-				om.amount.val, tc.expected, r)
+			t.Errorf("Expected %d Equals %d == %t got %t", m.amount,
+				om.amount, tc.expected, r)
 		}
 	}
 }
@@ -107,8 +127,8 @@ func TestMoney_GreaterThan(t *testing.T) {
 		r, err := m.GreaterThan(om)
 
 		if err != nil || r != tc.expected {
-			t.Errorf("Expected %d Greater Than %d == %t got %t", m.amount.val,
-				om.amount.val, tc.expected, r)
+			t.Errorf("Expected %d Greater Than %d == %t got %t", m.amount,
+				om.amount, tc.expected, r)
 		}
 	}
 }
@@ -129,8 +149,8 @@ func TestMoney_GreaterThanOrEqual(t *testing.T) {
 		r, err := m.GreaterThanOrEqual(om)
 
 		if err != nil || r != tc.expected {
-			t.Errorf("Expected %d Equals Or Greater Than %d == %t got %t", m.amount.val,
-				om.amount.val, tc.expected, r)
+			t.Errorf("Expected %d Equals Or Greater Than %d == %t got %t", m.amount,
+				om.amount, tc.expected, r)
 		}
 	}
 }
@@ -151,8 +171,8 @@ func TestMoney_LessThan(t *testing.T) {
 		r, err := m.LessThan(om)
 
 		if err != nil || r != tc.expected {
-			t.Errorf("Expected %d Less Than %d == %t got %t", m.amount.val,
-				om.amount.val, tc.expected, r)
+			t.Errorf("Expected %d Less Than %d == %t got %t", m.amount,
+				om.amount, tc.expected, r)
 		}
 	}
 }
@@ -173,8 +193,8 @@ func TestMoney_LessThanOrEqual(t *testing.T) {
 		r, err := m.LessThanOrEqual(om)
 
 		if err != nil || r != tc.expected {
-			t.Errorf("Expected %d Equal Or Less Than %d == %t got %t", m.amount.val,
-				om.amount.val, tc.expected, r)
+			t.Errorf("Expected %d Equal Or Less Than %d == %t got %t", m.amount,
+				om.amount, tc.expected, r)
 		}
 	}
 }
@@ -194,7 +214,7 @@ func TestMoney_IsZero(t *testing.T) {
 		r := m.IsZero()
 
 		if r != tc.expected {
-			t.Errorf("Expected %d to be zero == %t got %t", m.amount.val, tc.expected, r)
+			t.Errorf("Expected %d to be zero == %t got %t", m.amount, tc.expected, r)
 		}
 	}
 }
@@ -214,7 +234,7 @@ func TestMoney_IsNegative(t *testing.T) {
 		r := m.IsNegative()
 
 		if r != tc.expected {
-			t.Errorf("Expected %d to be negative == %t got %t", m.amount.val,
+			t.Errorf("Expected %d to be negative == %t got %t", m.amount,
 				tc.expected, r)
 		}
 	}
@@ -235,7 +255,7 @@ func TestMoney_IsPositive(t *testing.T) {
 		r := m.IsPositive()
 
 		if r != tc.expected {
-			t.Errorf("Expected %d to be positive == %t got %t", m.amount.val,
+			t.Errorf("Expected %d to be positive == %t got %t", m.amount,
 				tc.expected, r)
 		}
 	}
@@ -253,10 +273,10 @@ func TestMoney_Absolute(t *testing.T) {
 
 	for _, tc := range tcs {
 		m := New(tc.amount, EUR)
-		r := m.Absolute().amount.val
+		r := m.Absolute().amount
 
 		if r != tc.expected {
-			t.Errorf("Expected absolute %d to be %d got %d", m.amount.val,
+			t.Errorf("Expected absolute %d to be %d got %d", m.amount,
 				tc.expected, r)
 		}
 	}
@@ -274,10 +294,10 @@ func TestMoney_Negative(t *testing.T) {
 
 	for _, tc := range tcs {
 		m := New(tc.amount, EUR)
-		r := m.Negative().amount.val
+		r := m.Negative().amount
 
 		if r != tc.expected {
-			t.Errorf("Expected absolute %d to be %d got %d", m.amount.val,
+			t.Errorf("Expected absolute %d to be %d got %d", m.amount,
 				tc.expected, r)
 		}
 	}
@@ -305,7 +325,7 @@ func TestMoney_Add(t *testing.T) {
 
 		if r.Amount() != tc.expected {
 			t.Errorf("Expected %d + %d = %d got %d", tc.amount1, tc.amount2,
-				tc.expected, r.amount.val)
+				tc.expected, r.amount)
 		}
 	}
 }
@@ -340,9 +360,9 @@ func TestMoney_Subtract(t *testing.T) {
 			t.Error(err)
 		}
 
-		if r.amount.val != tc.expected {
+		if r.amount != tc.expected {
 			t.Errorf("Expected %d - %d = %d got %d", tc.amount1, tc.amount2,
-				tc.expected, r.amount.val)
+				tc.expected, r.amount)
 		}
 	}
 }
@@ -371,7 +391,7 @@ func TestMoney_Multiply(t *testing.T) {
 
 	for _, tc := range tcs {
 		m := New(tc.amount, EUR)
-		r := m.Multiply(tc.multiplier).amount.val
+		r := m.Multiply(tc.multiplier).amount
 
 		if r != tc.expected {
 			t.Errorf("Expected %d * %d = %d got %d", tc.amount, tc.multiplier, tc.expected, r)
@@ -395,7 +415,7 @@ func TestMoney_Round(t *testing.T) {
 
 	for _, tc := range tcs {
 		m := New(tc.amount, EUR)
-		r := m.Round().amount.val
+		r := m.Round().amount
 
 		if r != tc.expected {
 			t.Errorf("Expected rounded %d to be %d got %d", tc.amount, tc.expected, r)
@@ -414,7 +434,7 @@ func TestMoney_RoundWithExponential(t *testing.T) {
 	for _, tc := range tcs {
 		AddCurrency("CUR", "*", "$1", ".", ",", 3)
 		m := New(tc.amount, "CUR")
-		r := m.Round().amount.val
+		r := m.Round().amount
 
 		if r != tc.expected {
 			t.Errorf("Expected rounded %d to be %d got %d", tc.amount, tc.expected, r)
@@ -442,7 +462,7 @@ func TestMoney_Split(t *testing.T) {
 		split, _ := m.Split(tc.split)
 
 		for _, party := range split {
-			rs = append(rs, party.amount.val)
+			rs = append(rs, party.amount)
 		}
 
 		if !reflect.DeepEqual(tc.expected, rs) {
@@ -470,6 +490,10 @@ func TestMoney_Allocate(t *testing.T) {
 		{100, []int{30, 30, 30}, []int64{34, 33, 33}},
 		{200, []int{25, 25, 50}, []int64{50, 50, 100}},
 		{5, []int{50, 25, 25}, []int64{3, 1, 1}},
+		{0, []int{0, 0, 0, 0}, []int64{0, 0, 0, 0}},
+		{0, []int{50, 10}, []int64{0, 0}},
+		{10, []int{0, 100}, []int64{0, 10}},
+		{10, []int{0, 0}, []int64{0, 0}},
 	}
 
 	for _, tc := range tcs {
@@ -478,7 +502,7 @@ func TestMoney_Allocate(t *testing.T) {
 		split, _ := m.Allocate(tc.ratios...)
 
 		for _, party := range split {
-			rs = append(rs, party.amount.val)
+			rs = append(rs, party.amount)
 		}
 
 		if !reflect.DeepEqual(tc.expected, rs) {
@@ -583,13 +607,13 @@ func TestMoney_Comparison(t *testing.T) {
 	twoEuros := New(200, EUR)
 
 	if r, err := pound.GreaterThan(twoPounds); err != nil || r {
-		t.Errorf("Expected %d Greater Than %d == %t got %t", pound.amount.val,
-			twoPounds.amount.val, false, r)
+		t.Errorf("Expected %d Greater Than %d == %t got %t", pound.amount,
+			twoPounds.amount, false, r)
 	}
 
 	if r, err := pound.LessThan(twoPounds); err != nil || !r {
-		t.Errorf("Expected %d Less Than %d == %t got %t", pound.amount.val,
-			twoPounds.amount.val, true, r)
+		t.Errorf("Expected %d Less Than %d == %t got %t", pound.amount,
+			twoPounds.amount, true, r)
 	}
 
 	if r, err := pound.LessThan(twoEuros); err == nil || r {
@@ -611,6 +635,27 @@ func TestMoney_Comparison(t *testing.T) {
 	if r, err := pound.GreaterThanOrEqual(twoEuros); err == nil || r {
 		t.Error("Expected err")
 	}
+
+	if r, err := twoPounds.Compare(pound); r != 1 && err != nil {
+		t.Errorf("Expected %d Greater Than %d == %d got %d", pound.amount,
+			twoPounds.amount, 1, r)
+	}
+
+	if r, err := pound.Compare(twoPounds); r != -1 && err != nil {
+		t.Errorf("Expected %d Less Than %d == %d got %d", pound.amount,
+			twoPounds.amount, -1, r)
+	}
+
+	if _, err := pound.Compare(twoEuros); err != ErrCurrencyMismatch {
+		t.Error("Expected err")
+	}
+
+	anotherTwoEuros := New(200, EUR)
+	if r, err := twoEuros.Compare(anotherTwoEuros); r != 0 && err != nil {
+		t.Errorf("Expected %d Equals to %d == %d got %d", anotherTwoEuros.amount,
+			twoEuros.amount, 0, r)
+	}
+
 }
 
 func TestMoney_Currency(t *testing.T) {
@@ -626,6 +671,44 @@ func TestMoney_Amount(t *testing.T) {
 
 	if pound.Amount() != 100 {
 		t.Errorf("Expected %d got %d", 100, pound.Amount())
+	}
+}
+
+func TestNewFromFloat(t *testing.T) {
+	m := NewFromFloat(12.34, EUR)
+
+	if m.amount != 1234 {
+		t.Errorf("Expected %d got %d", 1234, m.amount)
+	}
+
+	if m.currency.Code != EUR {
+		t.Errorf("Expected currency %s got %s", EUR, m.currency.Code)
+	}
+
+	m = NewFromFloat(-0.125, EUR)
+
+	if m.amount != -12 {
+		t.Errorf("Expected %d got %d", -12, m.amount)
+	}
+}
+
+func TestNewFromFloat_WithUnregisteredCurrency(t *testing.T) {
+	const currencyFooCode = "FOO"
+	const expectedAmount = 1234
+	const expectedDisplay = "12.34FOO"
+
+	m := NewFromFloat(12.34, currencyFooCode)
+
+	if m.amount != expectedAmount {
+		t.Errorf("Expected amount %d got %d", expectedAmount, m.amount)
+	}
+
+	if m.currency.Code != currencyFooCode {
+		t.Errorf("Expected currency code %s got %s", currencyFooCode, m.currency.Code)
+	}
+
+	if m.Display() != expectedDisplay {
+		t.Errorf("Expected display %s got %s", expectedDisplay, m.Display())
 	}
 }
 
@@ -758,9 +841,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "GBP string with empty decimal",
 			amount: "GBP 1.00",
 			want: &Money{
-				amount: &Amount{
-					val: 100,
-				},
+				amount:   100,
 				currency: currencies["GBP"],
 			},
 			wantErr: false,
@@ -769,9 +850,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "USD string with decimal",
 			amount: "USD 123.45",
 			want: &Money{
-				amount: &Amount{
-					val: 12345,
-				},
+				amount:   12345,
 				currency: currencies["USD"],
 			},
 			wantErr: false,
@@ -780,9 +859,7 @@ func TestNewFromFormattedStringWithCode(t *testing.T) {
 			name:   "USD string with thousands and decimal",
 			amount: "USD 123,456.78",
 			want: &Money{
-				amount: &Amount{
-					val: 12345678,
-				},
+				amount:   12345678,
 				currency: currencies["USD"],
 			},
 			wantErr: false,
